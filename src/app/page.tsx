@@ -7,7 +7,7 @@ import { useState, useCallback, useRef } from "react";
 
 export default function Home() {
   const [currentConversationId, setCurrentConversationId] = useState<string | undefined>();
-  const refreshSidebarRef = useRef<() => void>();
+  const refreshSidebarRef = useRef<() => void>(undefined);
 
   const handleConversationCreated = useCallback((id: string) => {
     setCurrentConversationId(id);
