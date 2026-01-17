@@ -1,0 +1,13 @@
+<svg width="32" height="32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="chainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff6b35" />
+      <stop offset="50%" stop-color="#20b2aa" />
+      <stop offset="100%" stop-color="#ff6b35" />
+    </linearGradient>
+  </defs>
+  <path d="M15 50 C15 35, 30 25, 45 25 C55 25, 60 30, 60 40 C60 50, 50 55, 40 55 C30 55, 25 50, 25 45" stroke="url(#chainGradient)" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <path d="M85 50 C85 65, 70 75, 55 75 C45 75, 40 70, 40 60 C40 50, 50 45, 60 45 C70 45, 75 50, 75 55" stroke="url(#chainGradient)" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <circle cx="50" cy="50" r="8" fill="url(#chainGradient)" />
+  <circle cx="50" cy="50" r="4" fill="#0d1f1c" />
+</svg>
