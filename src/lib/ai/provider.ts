@@ -76,43 +76,236 @@ function generateIntelligentMockResponse(userMessage: string, searchResults: Sea
     ? `Based on my search, I found relevant information about "${userMessage.slice(0, 50)}...".`
     : '';
 
-  // Greetings
-  if (message.includes('hello') || message.includes('hi') || message.includes('hey')) {
-    return `${searchContext}\nHello! I'm Kateno AI, your intelligent assistant. I'm here to help you with questions, coding, analysis, and much more. How can I assist you today?\n\n${searchResults.length > 0 ? 'I can see you have web search results available, so I can provide current information on various topics.' : 'Feel free to ask me anything - from simple questions to complex technical problems!'}`;
-  }
-
   // Questions about AI/ChatGPT/identity
   if (message.includes('who are you') || message.includes('what are you') || message.includes('your name')) {
-    return `${searchContext}\nI'm Kateno AI, an advanced AI assistant designed to provide helpful, accurate, and well-researched responses. I can:\n\n• **Answer questions** on a wide range of topics\n• **Help with coding** and technical problems  \n• **Analyze data** and provide insights\n• **Write content** and assist with creative tasks\n• **Web search** integration for current information\n\nI'm currently in enhanced demo mode, but in production I would be powered by advanced language models. What would you like to explore?`;
+    return `${searchContext}\nI'm Kateno AI, an advanced AI assistant designed to provide helpful, accurate, and well-researched responses. I can:
+
+• **Answer questions** on a wide range of topics
+• **Help with coding** and technical problems  
+• **Analyze data** and provide insights
+• **Write content** and assist with creative tasks
+• **Web search** integration for current information
+
+I'm currently in enhanced demo mode, but in production I would be powered by advanced language models. What would you like to explore?`;
   }
 
-  // Technical/coding questions
-  if (message.includes('code') || message.includes('programming') || message.includes('javascript') || 
-      message.includes('python') || message.includes('function') || message.includes('bug') ||
-      message.includes('error') || message.includes('debug')) {
-    return `${searchContext}\nGreat! I'd be happy to help with your coding question.\n\nI can assist with:\n- **Debugging code** and fixing errors\n- **Writing functions** and algorithms\n- **Best practices** and optimization\n- **Code review** and improvement suggestions\n\nHere's a helpful example:\n\n\`\`\`javascript\n// Example: Function with error handling\nfunction processData(data) {\n  try {\n    if (!data) {\n      throw new Error('No data provided');\n    }\n    return data.map(item => item.trim().toUpperCase());\n  } catch (error) {\n    console.error('Processing failed:', error.message);\n    return null;\n  }\n}\n\n// Usage\nconst result = processData(['hello', 'world']);\nconsole.log(result); // ['HELLO', 'WORLD']\n\`\`\`\n\nWhat specific coding challenge are you working on?`;
+  // Technical/coding questions - enhanced with Python examples
+  if (/\b(code|programming|javascript|python|function|bug|error|debug|fibonacci|series|algorithm)\b/.test(message)) {
+    let codeExample = '';
+    let language = 'python';
+    
+    // Specific Python Fibonacci request
+    if (message.includes('fibonacci')) {
+      codeExample = `def fibonacci_series(n):
+    """
+    Generate Fibonacci series up to n terms
+    """
+    fib_series = []
+    a, b = 0, 1
+    
+    for i in range(n):
+        fib_series.append(a)
+        a, b = b, a + b
+    
+    return fib_series
+
+# Example usage
+n_terms = 10
+result = fibonacci_series(n_terms)
+print(f"First {n_terms} terms of Fibonacci series:")
+print(result)
+
+# Alternative: Using recursion
+def fibonacci_recursive(n):
+    if n <= 1:
+        return n
+    return fibonacci_recursive(n-1) + fibonacci_recursive(n-2)
+
+print("Recursive approach (first 10 terms):")
+for i in range(10):
+    print(f"F({i}) = {fibonacci_recursive(i)}")`;
+      language = 'python';
+    } else if (message.includes('python')) {
+      codeExample = `# Python examples
+# 1. Basic function with error handling
+def process_data(data):
+    try:
+        if not data:
+            raise ValueError("No data provided")
+        return [item.strip().upper() for item in data if item]
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
+
+# 2. Working with lists
+numbers = [1, 2, 3, 4, 5]
+squared = [x**2 for x in numbers]
+print(f"Original: {numbers}")
+print(f"Squared: {squared}")
+
+# 3. File handling
+def read_file(filename):
+    try:
+        with open(filename, 'r') as file:
+            return file.read()
+    except FileNotFoundError:
+        return "File not found"
+    except Exception as e:
+        return f"Error reading file: {e}"
+
+# 4. Class example
+class Calculator:
+    def add(self, a, b):
+        return a + b
+    
+    def multiply(self, a, b):
+        return a * b
+
+calc = Calculator()
+print(f"2 + 3 = {calc.add(2, 3)}")
+print(f"4 * 5 = {calc.multiply(4, 5)}")`;
+      language = 'python';
+    } else {
+      codeExample = `// General programming examples
+// JavaScript function with error handling
+function processData(data) {
+  try {
+    if (!data || !Array.isArray(data)) {
+      throw new Error('Invalid data format');
+    }
+    return data
+      .filter(item => item && typeof item === 'string')
+      .map(item => item.trim().toUpperCase());
+  } catch (error) {
+    console.error('Processing failed:', error.message);
+    return null;
+  }
+}
+
+// Python equivalent
+def process_data(data):
+    try:
+        if not data or not isinstance(data, list):
+            raise ValueError("Invalid data format")
+        return [item.strip().upper() for item in data if item]
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
+
+// Usage examples
+const result = processData(['hello', ' world', '', 'test']);
+console.log(result); // ['HELLO', 'WORLD', 'TEST']`;
+      language = 'javascript';
+    }
+    
+    return `${searchContext}\nGreat! I'd be happy to help with your coding question.${codeExample ? `
+
+Here's a helpful example:
+
+\`\`\`${language}
+${codeExample}
+\`\`\`` : ''}
+
+I can assist with:
+- **Debugging code** and fixing errors
+- **Writing functions** and algorithms  
+- **Best practices** and optimization
+- **Code review** and improvement suggestions
+- **Python, JavaScript, and other languages**
+
+What specific coding challenge are you working on?`;
+  }
+
+  // Help/assistance requests - more specific matching (after technical check)
+  if (/\b(help|assist|support)\b/.test(message) && !/\b(code|programming|javascript|python|function|bug|error|debug|fibonacci|series|algorithm)\b/.test(message)) {
+    return `${searchContext}\nI'm here to help! As Kateno AI, I can assist you with a wide variety of tasks:
+
+**📚 Knowledge & Learning**
+- Answer questions on any topic
+- Explain complex concepts
+- Provide educational content
+
+**💻 Technical Support**  
+- Debug code and fix errors
+- Software development guidance
+- System administration tips
+
+**✍️ Content Creation**
+- Writing and editing assistance
+- Creative writing support
+- Document formatting
+
+**🔍 Research & Analysis**
+- Web search integration
+- Data analysis and insights
+- Information synthesis
+
+What specific area would you like help with?`;
   }
 
   // Web search related
   if (message.includes('search') || message.includes('google') || message.includes('research')) {
-    return `${searchContext}\nI can help you research any topic! My web search integration allows me to find current, relevant information from across the internet.\n\n**Search capabilities:**\n• Real-time web results via Tavily API\n• Multiple sources and perspectives  \n• Current events and recent information\n• Academic and technical resources\n\n${searchResults.length > 0 ? `I can see I have ${searchResults.length} search results available to reference in my response.` : 'What topic would you like me to research for you?'}\n\nWould you like me to search for information on a specific topic?`;
+    return `${searchContext}\nI can help you research any topic! My web search integration allows me to find current, relevant information from across the internet.
+
+**Search capabilities:**
+• Real-time web results via Tavily API
+• Multiple sources and perspectives  
+• Current events and recent information
+• Academic and technical resources
+
+${searchResults.length > 0 ? `I can see I have ${searchResults.length} search results available to reference in my response.` : 'What topic would you like me to research for you?'}
+
+Would you like me to search for information on a specific topic?`;
   }
 
-  // Help/assistance requests
-  if (message.includes('help') || message.includes('assist') || message.includes('support')) {
-    return `${searchContext}\nI'm here to help! As Kateno AI, I can assist you with a wide variety of tasks:\n\n**📚 Knowledge & Learning**\n- Answer questions on any topic\n- Explain complex concepts\n- Provide educational content\n\n**💻 Technical Support**  \n- Debug code and fix errors\n- Software development guidance\n- System administration tips\n\n**✍️ Content Creation**\n- Writing and editing assistance\n- Creative writing support\n- Document formatting\n\n**🔍 Research & Analysis**\n- Web search integration\n- Data analysis and insights\n- Information synthesis\n\nWhat specific area would you like help with?`;
+  // Greetings - more specific matching
+  if (/^(hello|hi|hey)\b/.test(message)) {
+    return `${searchContext}\nHello! I'm Kateno AI, your intelligent assistant. I'm here to help you with questions, coding, analysis, and much more. How can I assist you today?
+
+${searchResults.length > 0 ? 'I can see you have web search results available, so I can provide current information on various topics.' : 'Feel free to ask me anything - from simple questions to complex technical problems!'}`;
   }
 
   // General questions - provide helpful response
   if (message.includes('?')) {
-    return `${searchContext}\nThat's an interesting question! I appreciate you reaching out.\n\nWhile I'm currently operating in enhanced demo mode, I can still provide helpful responses and engage with your questions thoughtfully. In a full deployment, I would access extensive knowledge bases and current web information.\n\n**Here's how I can assist:**\n• Break down complex topics into understandable parts\n• Provide multiple perspectives on issues\n• Suggest relevant resources and further reading\n• Help you think through problems step-by-step\n\nWhat specific aspect of your question would you like me to focus on?`;
+    return `${searchContext}\nThat's an interesting question! I appreciate you reaching out.
+
+While I'm currently operating in enhanced demo mode, I can still provide helpful responses and engage with your questions thoughtfully. In a full deployment, I would access extensive knowledge bases and current web information.
+
+**Here's how I can assist:**
+• Break down complex topics into understandable parts
+• Provide multiple perspectives on issues
+• Suggest relevant resources and further reading
+• Help you think through problems step-by-step
+
+What specific aspect of your question would you like me to focus on?`;
   }
 
   // Default response for other inputs
   const defaultResponses = [
-    `${searchContext}\nThank you for your message! I understand you're discussing "${userMessage.slice(0, 30)}..."\n\nAs Kateno AI, I'm designed to be helpful, informative, and engaging. Even in demo mode, I can:\n\n• **Listen and understand** your needs\n• **Provide thoughtful responses** \n• **Engage in meaningful conversation**\n• **Help solve problems** and answer questions\n\nWhat would you like to explore or discuss further?`,
+    `${searchContext}\nThank you for your message! I understand you're discussing "${userMessage.slice(0, 30)}..."
+
+As Kateno AI, I'm designed to be helpful, informative, and engaging. Even in demo mode, I can:
+
+• **Listen and understand** your needs
+• **Provide thoughtful responses** 
+• **Engage in meaningful conversation**
+• **Help solve problems** and answer questions
+
+What would you like to explore or discuss further?`,
     
-    `${searchContext}\nI appreciate you sharing "${userMessage.slice(0, 40)}..." with me.\n\n**Kateno AI is ready to help!** Here's what I can do:\n\n🔹 **Answer questions** on any topic\n🔹 **Provide explanations** and insights  \n🔹 **Help with technical challenges**\n🔹 **Assist with creative projects**\n🔹 **Research current information**\n\n${searchResults.length > 0 ? `I have access to current web search results to provide up-to-date information.` : 'I can also integrate web search for the most current information.'}\n\nWhat specific assistance would be most helpful for you right now?`
+    `${searchContext}\nI appreciate you sharing "${userMessage.slice(0, 40)}..." with me.
+
+**Kateno AI is ready to help!** Here's what I can do:
+
+🔹 **Answer questions** on any topic
+🔹 **Provide explanations** and insights  
+🔹 **Help with technical challenges**
+🔹 **Assist with creative projects**
+🔹 **Research current information**
+
+${searchResults.length > 0 ? `I have access to current web search results to provide up-to-date information.` : 'I can also integrate web search for the most current information.'}
+
+What specific assistance would be most helpful for you right now?`
   ];
 
   return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
