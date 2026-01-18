@@ -70,25 +70,64 @@ function formatSearchResults(results: SearchResult[]): string {
   ).join('\n\n')}\n\n[End of Search Results]\n`;
 }
 
+function generateIntelligentMockResponse(userMessage: string, searchResults: SearchResult[]): string {
+  const message = userMessage.toLowerCase();
+  const searchContext = searchResults.length > 0 
+    ? `Based on my search, I found relevant information about "${userMessage.slice(0, 50)}...".`
+    : '';
+
+  // Greetings
+  if (message.includes('hello') || message.includes('hi') || message.includes('hey')) {
+    return `${searchContext}\nHello! I'm Kateno AI, your intelligent assistant. I'm here to help you with questions, coding, analysis, and much more. How can I assist you today?\n\n${searchResults.length > 0 ? 'I can see you have web search results available, so I can provide current information on various topics.' : 'Feel free to ask me anything - from simple questions to complex technical problems!'}`;
+  }
+
+  // Questions about AI/ChatGPT/identity
+  if (message.includes('who are you') || message.includes('what are you') || message.includes('your name')) {
+    return `${searchContext}\nI'm Kateno AI, an advanced AI assistant designed to provide helpful, accurate, and well-researched responses. I can:\n\n• **Answer questions** on a wide range of topics\n• **Help with coding** and technical problems  \n• **Analyze data** and provide insights\n• **Write content** and assist with creative tasks\n• **Web search** integration for current information\n\nI'm currently in enhanced demo mode, but in production I would be powered by advanced language models. What would you like to explore?`;
+  }
+
+  // Technical/coding questions
+  if (message.includes('code') || message.includes('programming') || message.includes('javascript') || 
+      message.includes('python') || message.includes('function') || message.includes('bug') ||
+      message.includes('error') || message.includes('debug')) {
+    return `${searchContext}\nGreat! I'd be happy to help with your coding question.\n\nI can assist with:\n- **Debugging code** and fixing errors\n- **Writing functions** and algorithms\n- **Best practices** and optimization\n- **Code review** and improvement suggestions\n\nHere's a helpful example:\n\n\`\`\`javascript\n// Example: Function with error handling\nfunction processData(data) {\n  try {\n    if (!data) {\n      throw new Error('No data provided');\n    }\n    return data.map(item => item.trim().toUpperCase());\n  } catch (error) {\n    console.error('Processing failed:', error.message);\n    return null;\n  }\n}\n\n// Usage\nconst result = processData(['hello', 'world']);\nconsole.log(result); // ['HELLO', 'WORLD']\n\`\`\`\n\nWhat specific coding challenge are you working on?`;
+  }
+
+  // Web search related
+  if (message.includes('search') || message.includes('google') || message.includes('research')) {
+    return `${searchContext}\nI can help you research any topic! My web search integration allows me to find current, relevant information from across the internet.\n\n**Search capabilities:**\n• Real-time web results via Tavily API\n• Multiple sources and perspectives  \n• Current events and recent information\n• Academic and technical resources\n\n${searchResults.length > 0 ? `I can see I have ${searchResults.length} search results available to reference in my response.` : 'What topic would you like me to research for you?'}\n\nWould you like me to search for information on a specific topic?`;
+  }
+
+  // Help/assistance requests
+  if (message.includes('help') || message.includes('assist') || message.includes('support')) {
+    return `${searchContext}\nI'm here to help! As Kateno AI, I can assist you with a wide variety of tasks:\n\n**📚 Knowledge & Learning**\n- Answer questions on any topic\n- Explain complex concepts\n- Provide educational content\n\n**💻 Technical Support**  \n- Debug code and fix errors\n- Software development guidance\n- System administration tips\n\n**✍️ Content Creation**\n- Writing and editing assistance\n- Creative writing support\n- Document formatting\n\n**🔍 Research & Analysis**\n- Web search integration\n- Data analysis and insights\n- Information synthesis\n\nWhat specific area would you like help with?`;
+  }
+
+  // General questions - provide helpful response
+  if (message.includes('?')) {
+    return `${searchContext}\nThat's an interesting question! I appreciate you reaching out.\n\nWhile I'm currently operating in enhanced demo mode, I can still provide helpful responses and engage with your questions thoughtfully. In a full deployment, I would access extensive knowledge bases and current web information.\n\n**Here's how I can assist:**\n• Break down complex topics into understandable parts\n• Provide multiple perspectives on issues\n• Suggest relevant resources and further reading\n• Help you think through problems step-by-step\n\nWhat specific aspect of your question would you like me to focus on?`;
+  }
+
+  // Default response for other inputs
+  const defaultResponses = [
+    `${searchContext}\nThank you for your message! I understand you're discussing "${userMessage.slice(0, 30)}..."\n\nAs Kateno AI, I'm designed to be helpful, informative, and engaging. Even in demo mode, I can:\n\n• **Listen and understand** your needs\n• **Provide thoughtful responses** \n• **Engage in meaningful conversation**\n• **Help solve problems** and answer questions\n\nWhat would you like to explore or discuss further?`,
+    
+    `${searchContext}\nI appreciate you sharing "${userMessage.slice(0, 40)}..." with me.\n\n**Kateno AI is ready to help!** Here's what I can do:\n\n🔹 **Answer questions** on any topic\n🔹 **Provide explanations** and insights  \n🔹 **Help with technical challenges**\n🔹 **Assist with creative projects**\n🔹 **Research current information**\n\n${searchResults.length > 0 ? `I have access to current web search results to provide up-to-date information.` : 'I can also integrate web search for the most current information.'}\n\nWhat specific assistance would be most helpful for you right now?`
+  ];
+
+  return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
+}
+
 async function mockStream(messages: Message[], searchResults: SearchResult[]): Promise<ReadableStream> {
   const lastMessage = messages[messages.length - 1];
-  const searchContext = searchResults.length > 0 
-    ? `Based on my search, I found relevant information about "${lastMessage.content.slice(0, 50)}".`
-    : '';
-  
-  const mockResponses = [
-    `${searchContext}\n\nI understand you're asking about "${lastMessage.content.slice(0, 50)}...". Here's what I can tell you:\n\nThis is a mock response demonstrating Kateno AI's capabilities. In production with an OpenAI API key, this would be replaced with intelligent AI-generated content.\n\n**Key points:**\n- Kateno AI is working correctly\n- Your message was received and processed\n- Web search integration is ${searchResults.length > 0 ? 'active' : 'available with Tavily API key'}`,
-    `${searchContext}\n\nGreat question! Let me help you with that.\n\n\`\`\`javascript\n// Example code\nfunction greet(name) {\n  return \`Hello, \${name}!\`;\n}\n\nconsole.log(greet('World'));\n\`\`\`\n\nThis demonstrates Kateno AI's code formatting with scrollable blocks.`,
-    `${searchContext}\n\nI've analyzed your request. Here are my thoughts:\n\n1. **Understanding**: Your query has been processed\n2. **Analysis**: Kateno AI is simulating a thoughtful response\n3. **Conclusion**: Everything is working as expected!\n\n> Note: This is mock mode - add your OpenAI API key for full functionality.`,
-  ];
-  
-  const response = mockResponses[Math.floor(Math.random() * mockResponses.length)];
+  const response = generateIntelligentMockResponse(lastMessage.content, searchResults);
   const encoder = new TextEncoder();
   
   return new ReadableStream({
     async start(controller) {
+      // Realistic typing delay simulation
       for (const char of response) {
-        await new Promise((resolve) => setTimeout(resolve, 10));
+        await new Promise(resolve => setTimeout(resolve, 8 + Math.random() * 12));
         controller.enqueue(encoder.encode(char));
       }
       controller.close();
@@ -205,7 +244,7 @@ export async function streamChat(
       try {
         return await streamBlackBoxAI(messages, contextMemory || '', searchResults);
       } catch (error) {
-        console.error('BlackBox AI failed, falling back to mock:', error);
+        console.error('BlackBox AI failed, falling back to intelligent mock:', error);
         const stream = await mockStream(messages, searchResults);
         return new Response(stream, {
           headers: {
