@@ -7,7 +7,7 @@ export const config = {
     url: process.env.NEXTAUTH_URL || 'http://localhost:3000',
   },
   ai: {
-    defaultProvider: 'openai' as AIProvider,
+    defaultProvider: 'deepseek' as AIProvider,
     maxTokens: 4096,
     temperature: 0.7,
     streamingEnabled: true,
@@ -32,13 +32,11 @@ export const config = {
 export function getAvailableProviders(): AIProviderConfig[] {
   const providers: AIProviderConfig[] = [];
 
-  if (process.env.OPENAI_API_KEY) {
-    providers.push({
-      name: 'openai',
-      available: true,
-      model: 'gpt-4o-mini',
-    });
-  }
+  providers.push({
+    name: 'deepseek',
+    available: true,
+    model: 'blackboxai/deepseek/deepseek-chat:free',
+  });
 
   if (process.env.HUGGINGFACE_API_KEY) {
     providers.push({

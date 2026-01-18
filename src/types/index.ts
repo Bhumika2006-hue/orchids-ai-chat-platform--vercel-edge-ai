@@ -23,7 +23,7 @@ export interface User {
   isAnonymous: boolean;
 }
 
-export type AIProvider = 'openai' | 'huggingface' | 'mock';
+export type AIProvider = 'deepseek' | 'huggingface' | 'mock';
 
 export interface AIProviderConfig {
   name: AIProvider;
