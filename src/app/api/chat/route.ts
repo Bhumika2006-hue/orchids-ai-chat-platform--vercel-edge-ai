@@ -19,10 +19,9 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { messages } = validateAndSanitize(ChatRequestSchema, body);
-    const contextMemory = body.contextMemory || '';
+    const { messages, contextMemory } = validateAndSanitize(ChatRequestSchema, body);
 
-    const response = await streamChat(messages, undefined, contextMemory);
+    const response = await streamChat(messages, undefined, contextMemory || '');
     
     return new Response(response.body, {
       status: response.status,

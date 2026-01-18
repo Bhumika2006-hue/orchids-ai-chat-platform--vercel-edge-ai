@@ -15,6 +15,43 @@ interface SearchResult {
 const BLACKBOX_API_KEY = 'sk-XN13reQfIX-D8rAipMUqSg';
 const BLACKBOX_MODEL = 'blackboxai/deepseek/deepseek-chat:free';
 
+// DeepSeek supports very large context windows. We keep essentially the whole
+// conversation, but still protect against runaway payload sizes.
+const MAX_CONTEXT_TOKENS = 163_840;
+
+function approximateTokenCount(text: string): number {
+  // Rough heuristic used by many apps: ~4 chars per token in English.
+  return Math.ceil(text.length / 4);
+}
+
+function trimConversationToTokenLimit(
+  messages: Message[],
+  systemPrompt: string,
+  maxTokens: number
+): Message[] {
+  const systemTokens = approximateTokenCount(systemPrompt);
+  if (systemTokens >= maxTokens) {
+    return messages.slice(-1);
+  }
+
+  const kept: Message[] = [];
+  let total = systemTokens;
+
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const msg = messages[i];
+    const msgTokens = approximateTokenCount(msg.content) + 4;
+
+    if (total + msgTokens > maxTokens) {
+      break;
+    }
+
+    kept.push(msg);
+    total += msgTokens;
+  }
+
+  return kept.reverse();
+}
+
 const SYSTEM_PROMPT = `You are Kateno AI — a sharp, friendly, opinionated AI assistant.
 
 Your goal is to sound like a highly skilled human developer / researcher who enjoys helping, not a robotic helpdesk agent.
@@ -95,11 +132,29 @@ function formatSearchResults(results: SearchResult[]): string {
   ).join('\n\n')}\n\n[End of Search Results]\n`;
 }
 
-function generateIntelligentMockResponse(userMessage: string, searchResults: SearchResult[]): string {
+function generateIntelligentMockResponse(messages: Message[], searchResults: SearchResult[]): string {
+  const lastUserMessage = [...messages].reverse().find((m) => m.role === 'user');
+  const userMessage = lastUserMessage?.content || messages[messages.length - 1]?.content || '';
   const message = userMessage.toLowerCase();
-  const searchContext = searchResults.length > 0 
-    ? `Based on my search, I found relevant information about "${userMessage.slice(0, 50)}...".`
-    : '';
+
+  const previousUserMessages = messages
+    .filter((m) => m.role === 'user')
+    .slice(0, -1)
+    .slice(-3)
+    .map((m) => m.content.trim())
+    .filter(Boolean);
+
+  const memoryContext =
+    previousUserMessages.length > 0
+      ? `\n\n(Quick memory from earlier in this chat: ${previousUserMessages
+          .map((m) => m.slice(0, 120))
+          .join(' | ')})`
+      : '';
+
+  const searchContext =
+    (searchResults.length > 0
+      ? `Based on my search, I found relevant information about "${userMessage.slice(0, 50)}...".`
+      : '') + memoryContext;
 
   // Questions about AI/ChatGPT/identity
   if (message.includes('who are you') || message.includes('what are you') || message.includes('your name')) {
@@ -337,8 +392,7 @@ What specific assistance would be most helpful for you right now?`
 }
 
 async function mockStream(messages: Message[], searchResults: SearchResult[]): Promise<ReadableStream> {
-  const lastMessage = messages[messages.length - 1];
-  const response = generateIntelligentMockResponse(lastMessage.content, searchResults);
+  const response = generateIntelligentMockResponse(messages, searchResults);
   const encoder = new TextEncoder();
   
   return new ReadableStream({
@@ -356,10 +410,16 @@ async function mockStream(messages: Message[], searchResults: SearchResult[]): P
 async function streamBlackBoxAI(messages: Message[], contextMemory: string, searchResults: SearchResult[]) {
   const searchContext = formatSearchResults(searchResults);
   const enhancedSystem = `${SYSTEM_PROMPT}${contextMemory ? `\n\nUser Context: ${contextMemory}` : ''}${searchContext}`;
-  
+
+  const trimmedMessages = trimConversationToTokenLimit(
+    messages,
+    enhancedSystem,
+    MAX_CONTEXT_TOKENS
+  );
+
   const formattedMessages = [
     { role: 'system', content: enhancedSystem },
-    ...messages.map(m => ({ role: m.role, content: m.content })),
+    ...trimmedMessages.map((m) => ({ role: m.role, content: m.content })),
   ];
 
   try {

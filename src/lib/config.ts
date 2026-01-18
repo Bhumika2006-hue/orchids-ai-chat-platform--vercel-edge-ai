@@ -7,7 +7,7 @@ export const config = {
     url: process.env.NEXTAUTH_URL || 'http://localhost:3000',
   },
   ai: {
-    defaultProvider: 'mock' as AIProvider,
+    defaultProvider: 'deepseek' as AIProvider,
     maxTokens: 4096,
     temperature: 0.7,
     streamingEnabled: true,
@@ -57,6 +57,11 @@ export function getAvailableProviders(): AIProviderConfig[] {
 
 export function getActiveProvider(): AIProviderConfig {
   const providers = getAvailableProviders();
-  // Default to mock provider for reliable demo experience
-  return providers.find((p) => p.name === 'mock' && p.available) || providers[providers.length - 1];
+
+  const preferred = providers.find(
+    (p) => p.name === config.ai.defaultProvider && p.available
+  );
+  if (preferred) return preferred;
+
+  return providers.find((p) => p.name === 'mock' && p.available) || providers[0];
 }

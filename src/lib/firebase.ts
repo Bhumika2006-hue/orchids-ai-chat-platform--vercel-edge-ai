@@ -101,17 +101,47 @@ export const firebaseDb = {
   async saveConversation(userId: string, conversation: Omit<Conversation, 'userId'>): Promise<void> {
     initializeFirebase();
     if (!db) return;
+
     const docRef = doc(db, 'conversations', conversation.id);
-    await setDoc(docRef, {
-      ...conversation,
-      userId,
-      createdAt: Timestamp.fromDate(conversation.createdAt),
-      updatedAt: Timestamp.fromDate(conversation.updatedAt),
-      messages: conversation.messages.map(m => ({
-        ...m,
-        timestamp: Timestamp.fromDate(m.timestamp),
-      })),
-    });
+
+    let createdAt = conversation.createdAt;
+    let title = conversation.title;
+
+    try {
+      const existing = await getDoc(docRef);
+      if (existing.exists()) {
+        const data = existing.data();
+
+        if (data.createdAt?.toDate) {
+          createdAt = data.createdAt.toDate();
+        }
+
+        const existingTitle = data.title;
+        if (typeof existingTitle === 'string' && existingTitle.trim() && existingTitle !== 'New Chat') {
+          title = existingTitle;
+        } else if (existingTitle === 'New Chat' && conversation.title !== 'New Chat') {
+          title = conversation.title;
+        }
+      }
+    } catch {
+      // If we can't read the existing doc (network/rules), we still try writing.
+    }
+
+    await setDoc(
+      docRef,
+      {
+        ...conversation,
+        title,
+        userId,
+        createdAt: Timestamp.fromDate(createdAt),
+        updatedAt: Timestamp.fromDate(conversation.updatedAt),
+        messages: conversation.messages.map((m) => ({
+          ...m,
+          timestamp: Timestamp.fromDate(m.timestamp),
+        })),
+      },
+      { merge: true }
+    );
   },
 
   async getConversations(userId: string): Promise<Conversation[]> {

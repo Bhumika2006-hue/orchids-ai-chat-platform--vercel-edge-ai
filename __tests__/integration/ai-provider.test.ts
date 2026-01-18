@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { getAvailableProviders, getActiveProvider } from '@/lib/config';
 
 describe('AI Provider Integration', () => {
@@ -24,9 +24,9 @@ describe('AI Provider Integration', () => {
       expect(provider.available).toBe(true);
     });
 
-    it('returns mock as the active provider for demo', () => {
+    it('returns the configured provider as active (deepseek)', () => {
       const provider = getActiveProvider();
-      expect(provider.name).toBe('mock');
+      expect(provider.name).toBe('deepseek');
     });
   });
 });
