@@ -5,12 +5,25 @@ npm warn Unknown env config "python". This will stop working in the next major v
 
    ▲ Next.js 15.3.8 (Turbopack)
    - Local:        http://localhost:3000
-   - Network:      http://10.16.67.117:3000
+   - Network:      http://10.16.71.35:3000
    - Environments: .env.local
 
  ✓ Starting...
- ✓ Ready in 1624ms
+ ✓ Ready in 1488ms
  ○ Compiling /api/chat ...
- ✓ Compiled /api/chat in 2.7s
- POST /api/chat 200 in 7946ms
+ ✓ Compiled /api/chat in 2.6s
+BlackBox AI API error: {"error":{"message":"litellm.NotFoundError: NotFoundError: OpenrouterException - {\"error\":{\"message\":\"No endpoints found for deepseek/deepseek-chat:free.\",\"code\":404},\"user_id\":\"user_2dvySw1JqTZzABYD4OncxXptEmq\"}. Received Model Group=blackboxai/deepseek/deepseek-chat:free\nAvailable Model Group Fallbacks=None","type":null,"param":null,"code":"404"}}
+LLM streaming error: Error: BlackBox AI API failed with status 404
+    at streamBlackBoxAI (src/lib/ai/provider.ts:163:10)
+    at async streamChat (src/lib/ai/provider.ts:251:11)
+    at async POST (src/app/api/chat/route.ts:24:21)
+  161 |     const text = await response.text().catch(() => '');
+  162 |     console.error('BlackBox AI API error:', text);
+> 163 |     throw new Error(`BlackBox AI API failed with status ${response.status}`);
+      |          ^
+  164 |   }
+  165 |
+  166 |   if (!response.body) {
+ POST /api/chat 502 in 4248ms
+   Reload env: .env.local
 [?25h
