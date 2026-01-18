@@ -24,9 +24,9 @@ describe('AI Provider Integration', () => {
       expect(provider.available).toBe(true);
     });
 
-    it('returns deepseek as the active provider', () => {
+    it('returns mock as the active provider for demo', () => {
       const provider = getActiveProvider();
-      expect(provider.name).toBe('deepseek');
+      expect(provider.name).toBe('mock');
     });
   });
 });
