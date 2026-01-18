@@ -1,50 +1,75 @@
 # Deployment Checklist for Kateno AI
 
-## Changes Made
+## 🚨 CRITICAL: Two Steps Required for Production
 
-### 1. ✅ Fixed Firebase Permissions Errors
+### Step 1: Deploy Firebase Security Rules
 
-**Problem:** Console showed "Missing or insufficient permissions" errors for user settings and conversations.
+**Problem:** "Missing or insufficient permissions" errors
 
-**Solution:** Created `firestore.rules` file with proper security rules.
-
-**Action Required:**
+**Solution:**
 1. Go to [Firebase Console](https://console.firebase.google.com/)
 2. Select project: `fir-config-d3c36`
 3. Navigate to **Firestore Database** → **Rules** tab
-4. Copy the content from `firestore.rules` and paste it
-5. Click **Publish**
+4. Copy ALL content from `firestore.rules` file
+5. Paste into Firebase Console
+6. **Click "Publish"**
+7. Wait 30 seconds for propagation
 
-See `FIRESTORE_SETUP.md` for detailed instructions.
+### Step 2: Add Groq API Key
 
-### 2. ✅ Replaced AI Model with DeepSeek
+**Problem:** 502 errors - Previous API provider (BlackBox AI) exceeded budget
 
-**Before:** Used OpenAI's gpt-4o-mini (required OPENAI_API_KEY environment variable)
+**Solution:**
+1. Get free API key from: https://console.groq.com (takes 2 minutes)
+2. **For Local Dev:**
+   - Add to `.env.local`: `GROQ_API_KEY=gsk_your_key_here`
+3. **For Vercel Production:**
+   - Go to Vercel Dashboard → Your Project → Settings → Environment Variables
+   - Add: `GROQ_API_KEY` = `gsk_your_key_here`
+   - **Redeploy the app**
 
-**After:** Now using BlackBox AI with DeepSeek model (blackboxai/deepseek/deepseek-chat:free)
+See `GET_GROQ_KEY.md` for detailed steps.
 
-**Changes:**
-- Hardcoded API key in the code (no environment variables needed)
-- Updated AI provider from 'openai' to 'deepseek'
-- Implemented custom BlackBox AI streaming function
-- Updated all configuration files
+---
+
+## Changes Made in This Fix
+
+### 1. ✅ Fixed Firebase Permissions
+
+**Updated `firestore.rules`:**
+- Now properly validates userId matches authenticated user
+- Removed conflicting rules
+- Added proper read/write restrictions
 
 **Files Modified:**
-- `src/lib/ai/provider.ts` - Main AI provider logic
-- `src/lib/config.ts` - Configuration for default provider
-- `src/types/index.ts` - Updated AIProvider type
-- `__tests__/integration/ai-provider.test.ts` - Updated tests
-- `.env.example` - Updated documentation
+- `firestore.rules` - Improved security rules
+- `firebase.json` - Added Firebase config
+- `.firebaserc` - Added project reference
 
-### 3. ✅ Deployment Configuration
+### 2. ✅ Switched to Groq AI Provider
 
-**No Environment Variables Needed:**
-- API key is hardcoded in the application
-- No need to set any variables in Vercel project settings
-- Firebase credentials are already configured with fallbacks
+**Before:** BlackBox AI (budget exceeded, 502 errors)
 
-**Optional Environment Variables:**
-- `TAVILY_API_KEY` - Only if you want web search integration
+**After:** Groq with Llama 3.3 70B (free tier, production ready)
+
+**Why Groq:**
+- ✅ Free tier: 30 requests/min
+- ✅ Fast: < 1 second response
+- ✅ Powerful: Llama 3.3 70B (GPT-4 level)
+- ✅ Reliable: Production grade infrastructure
+- ✅ No credit card required
+
+**Files Modified:**
+- `src/lib/ai/provider.ts` - Switched from BlackBox to Groq
+- `.env.local` - Added GROQ_API_KEY variable
+- `.env.example` - Updated with Groq instructions
+
+### 3. ✅ Production-Grade Error Handling
+
+**Improvements:**
+- Better error messages show exact issue (API key missing, etc.)
+- Proper streaming error handling
+- Detailed logging for debugging
 
 ## Verification Steps
 

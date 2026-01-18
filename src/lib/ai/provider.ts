@@ -12,8 +12,9 @@ interface SearchResult {
   content: string;
 }
 
-const BLACKBOX_API_KEY = 'sk-XN13reQfIX-D8rAipMUqSg';
-const BLACKBOX_MODEL = 'blackboxai/deepseek/deepseek-chat:free';
+// API Keys - Set these in your environment variables for production
+const GROQ_API_KEY = process.env.GROQ_API_KEY || '';
+const GROQ_MODEL = 'llama-3.3-70b-versatile';
 
 const MAX_CONTEXT_TOKENS = 163_840;
 
@@ -126,11 +127,15 @@ function buildSystemPrompt(contextMemory: string, searchResults: SearchResult[])
   return parts.join('\n\n');
 }
 
-async function streamBlackBoxAI(
+async function streamGroq(
   messages: Message[],
   contextMemory: string,
   searchResults: SearchResult[]
 ): Promise<Response> {
+  if (!GROQ_API_KEY) {
+    throw new Error('GROQ_API_KEY environment variable is not set');
+  }
+
   const enhancedSystem = buildSystemPrompt(contextMemory, searchResults);
 
   const trimmedMessages = trimConversationToTokenLimit(
@@ -144,27 +149,29 @@ async function streamBlackBoxAI(
     ...trimmedMessages,
   ];
 
-  const response = await fetch('https://api.blackbox.ai/v1/chat/completions', {
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${BLACKBOX_API_KEY}`,
+      Authorization: `Bearer ${GROQ_API_KEY}`,
     },
     body: JSON.stringify({
-      model: BLACKBOX_MODEL,
+      model: GROQ_MODEL,
       messages: formattedMessages,
       stream: true,
+      temperature: 0.7,
+      max_tokens: 8000,
     }),
   });
 
   if (!response.ok) {
     const text = await response.text().catch(() => '');
-    console.error('BlackBox AI API error:', text);
-    throw new Error(`BlackBox AI API failed with status ${response.status}`);
+    console.error('Groq API error:', text);
+    throw new Error(`Groq API failed with status ${response.status}`);
   }
 
   if (!response.body) {
-    throw new Error('No response body from BlackBox AI');
+    throw new Error('No response body from Groq');
   }
 
   const reader = response.body.getReader();
@@ -248,10 +255,11 @@ export async function streamChat(
   const searchResults = query ? await searchTavily(query) : [];
 
   try {
-    return await streamBlackBoxAI(messages, contextMemory || '', searchResults);
+    return await streamGroq(messages, contextMemory || '', searchResults);
   } catch (error) {
     console.error('LLM streaming error:', error);
-    return new Response(JSON.stringify({ error: 'Upstream model error' }), {
+    const errorMessage = error instanceof Error ? error.message : 'Upstream model error';
+    return new Response(JSON.stringify({ error: errorMessage }), {
       status: 502,
       headers: { 'Content-Type': 'application/json' },
     });
