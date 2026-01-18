@@ -14,7 +14,7 @@ interface SearchResult {
 
 // API Keys - Set these in your environment variables for production
 const GROQ_API_KEY = process.env.GROQ_API_KEY || '';
-const GROQ_MODEL = 'llama-3.3-70b-versatile';
+const GROQ_MODEL = 'openai/gpt-oss-120b';
 
 const MAX_CONTEXT_TOKENS = 163_840;
 
