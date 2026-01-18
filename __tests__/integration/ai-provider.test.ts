@@ -24,9 +24,9 @@ describe('AI Provider Integration', () => {
       expect(provider.available).toBe(true);
     });
 
-    it('falls back to mock when no API keys', () => {
+    it('returns deepseek as the active provider', () => {
       const provider = getActiveProvider();
-      expect(provider.name).toBe('mock');
+      expect(provider.name).toBe('deepseek');
     });
   });
 });

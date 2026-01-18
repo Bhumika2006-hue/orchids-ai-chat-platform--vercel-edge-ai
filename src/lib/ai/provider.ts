@@ -1,5 +1,3 @@
-import { streamText } from 'ai';
-import { openai } from '@ai-sdk/openai';
 import type { AIProvider } from '@/types';
 import { getActiveProvider } from '@/lib/config';
 
@@ -13,6 +11,9 @@ interface SearchResult {
   url: string;
   content: string;
 }
+
+const BLACKBOX_API_KEY = 'sk-XN13reQfIX-D8rAipMUqSg';
+const BLACKBOX_MODEL = 'blackboxai/deepseek/deepseek-chat:free';
 
 const SYSTEM_PROMPT = `You are Kateno AI, an advanced AI assistant that provides accurate, well-researched responses. You have access to real-time web search results to ensure your answers are current and factual.
 
@@ -95,17 +96,95 @@ async function mockStream(messages: Message[], searchResults: SearchResult[]): P
   });
 }
 
-async function streamOpenAI(messages: Message[], contextMemory: string, searchResults: SearchResult[]) {
+async function streamBlackBoxAI(messages: Message[], contextMemory: string, searchResults: SearchResult[]) {
   const searchContext = formatSearchResults(searchResults);
   const enhancedSystem = `${SYSTEM_PROMPT}${contextMemory ? `\n\nUser Context: ${contextMemory}` : ''}${searchContext}`;
   
-  const result = streamText({
-    model: openai('gpt-4o-mini'),
-    system: enhancedSystem,
-    messages: messages.map(m => ({ role: m.role, content: m.content })),
-  });
+  const formattedMessages = [
+    { role: 'system', content: enhancedSystem },
+    ...messages.map(m => ({ role: m.role, content: m.content })),
+  ];
 
-  return result.toTextStreamResponse();
+  try {
+    const response = await fetch('https://api.blackbox.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${BLACKBOX_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: BLACKBOX_MODEL,
+        messages: formattedMessages,
+        stream: true,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('BlackBox AI API error:', await response.text());
+      throw new Error(`BlackBox AI API failed with status ${response.status}`);
+    }
+
+    if (!response.body) {
+      throw new Error('No response body from BlackBox AI');
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            
+            if (done) {
+              controller.close();
+              break;
+            }
+            
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split('\n').filter(line => line.trim() !== '');
+            
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                const data = line.slice(6);
+                
+                if (data === '[DONE]') {
+                  controller.close();
+                  return;
+                }
+                
+                try {
+                  const parsed = JSON.parse(data);
+                  const content = parsed.choices?.[0]?.delta?.content;
+                  
+                  if (content) {
+                    controller.enqueue(new TextEncoder().encode(content));
+                  }
+                } catch (e) {
+                  console.warn('Failed to parse SSE data:', data);
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Stream error:', error);
+          controller.error(error);
+        }
+      },
+    });
+
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      },
+    });
+  } catch (error) {
+    console.error('BlackBox AI streaming error:', error);
+    throw error;
+  }
 }
 
 export async function streamChat(
@@ -122,11 +201,20 @@ export async function streamChat(
   }
 
   switch (activeProvider) {
-    case 'openai':
-      if (!process.env.OPENAI_API_KEY) {
-        return streamChat(messages, 'mock', contextMemory);
+    case 'deepseek':
+      try {
+        return await streamBlackBoxAI(messages, contextMemory || '', searchResults);
+      } catch (error) {
+        console.error('BlackBox AI failed, falling back to mock:', error);
+        const stream = await mockStream(messages, searchResults);
+        return new Response(stream, {
+          headers: {
+            'Content-Type': 'text/plain; charset=utf-8',
+            'Cache-Control': 'no-cache',
+            Connection: 'keep-alive',
+          },
+        });
       }
-      return streamOpenAI(messages, contextMemory || '', searchResults);
 
     case 'mock':
     default:
