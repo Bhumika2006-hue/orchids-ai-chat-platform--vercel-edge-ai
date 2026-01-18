@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Loader2, Mic, MicOff, StopCircle, FileText, Download } from "lucide-react";
+import { Send, Mic, MicOff, StopCircle, FileText, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ChatMessage } from "./chat-message";
 import { ChainLogo } from "@/components/ui/chain-logo";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/auth-context";
-import { firebaseDb, ChatMessage as FirebaseChatMessage, Conversation } from "@/lib/firebase";
+import { firebaseDb, type Conversation } from "@/lib/firebase";
 import { v4 as uuid } from "uuid";
 import { toast } from "sonner";
 
@@ -20,47 +20,104 @@ interface Message {
 
 interface ChatInterfaceProps {
   conversationId?: string;
+  resetKey?: number;
   onConversationCreated?: (id: string) => void;
   onConversationUpdated?: () => void;
 }
 
-export function ChatInterface({ conversationId, onConversationCreated, onConversationUpdated }: ChatInterfaceProps) {
+export function ChatInterface({
+  conversationId,
+  resetKey,
+  onConversationCreated,
+  onConversationUpdated,
+}: ChatInterfaceProps) {
   const { user, settings } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingConversation, setIsLoadingConversation] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [showDocTools, setShowDocTools] = useState(false);
   const [currentConvId, setCurrentConvId] = useState<string | undefined>(conversationId);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const skipLoadForConversationIdRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
-    if (conversationId && user) {
-      loadConversation(conversationId);
-    } else if (!conversationId) {
+    if (resetKey === undefined) return;
+
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
+    setIsLoading(false);
+    setIsListening(false);
+    setShowDocTools(false);
+    setInput("");
+    setMessages([]);
+    setCurrentConvId(undefined);
+  }, [resetKey]);
+
+  useEffect(() => {
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
+    setIsLoading(false);
+    setShowDocTools(false);
+    setIsListening(false);
+    setInput("");
+
+    if (conversationId && skipLoadForConversationIdRef.current === conversationId) {
+      skipLoadForConversationIdRef.current = undefined;
+      setIsLoadingConversation(false);
+      setCurrentConvId(conversationId);
+      return;
+    }
+
+    if (!conversationId) {
+      setIsLoadingConversation(false);
       setMessages([]);
       setCurrentConvId(undefined);
+      return;
     }
-  }, [conversationId, user]);
 
-  const loadConversation = async (id: string) => {
-    try {
-      const conv = await firebaseDb.getConversation(id);
-      if (conv) {
-        setMessages(conv.messages.map(m => ({
-          id: m.id,
-          role: m.role,
-          content: m.content,
-          timestamp: m.timestamp,
-        })));
-        setCurrentConvId(id);
-      }
-    } catch (error) {
-      console.error("Failed to load conversation:", error);
+    if (!user) {
+      setIsLoadingConversation(false);
+      setMessages([]);
+      setCurrentConvId(undefined);
+      return;
     }
-  };
+
+    let cancelled = false;
+
+    setIsLoadingConversation(true);
+    setCurrentConvId(conversationId);
+    setMessages([]);
+
+    (async () => {
+      try {
+        const conv = await firebaseDb.getConversation(conversationId);
+        if (!conv || cancelled) return;
+
+        setMessages(
+          conv.messages.map((m) => ({
+            id: m.id,
+            role: m.role,
+            content: m.content,
+            timestamp: m.timestamp,
+          }))
+        );
+      } catch (error) {
+        console.error("Failed to load conversation:", error);
+      } finally {
+        if (!cancelled) {
+          setIsLoadingConversation(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [conversationId, user]);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -79,22 +136,26 @@ export function ChatInterface({ conversationId, onConversationCreated, onConvers
 
   const saveToFirebase = async (msgs: Message[], convId: string, isNew: boolean) => {
     if (!user) return;
-    
+
     try {
-      const conversation: Omit<Conversation, 'userId'> = {
+      const now = new Date();
+      const firstUserContent = msgs.find((m) => m.role === "user")?.content;
+
+      const conversation: Omit<Conversation, "userId"> = {
         id: convId,
-        title: msgs[0]?.content.slice(0, 50) || "New Chat",
-        messages: msgs.map(m => ({
+        title: firstUserContent?.slice(0, 50) || "New Chat",
+        messages: msgs.map((m) => ({
           id: m.id,
           role: m.role,
           content: m.content,
           timestamp: m.timestamp,
         })),
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: now,
+        updatedAt: now,
       };
+
       await firebaseDb.saveConversation(user.uid, conversation);
-      
+
       if (isNew) {
         onConversationCreated?.(convId);
       }
@@ -106,7 +167,7 @@ export function ChatInterface({ conversationId, onConversationCreated, onConvers
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!input.trim() || isLoading) return;
+    if (!input.trim() || isLoading || isLoadingConversation) return;
 
     const userMessage: Message = {
       id: uuid(),
@@ -172,6 +233,10 @@ export function ChatInterface({ conversationId, onConversationCreated, onConvers
         const convId = currentConvId || uuid();
         if (!currentConvId) {
           setCurrentConvId(convId);
+        }
+
+        if (user && isNewConversation) {
+          skipLoadForConversationIdRef.current = convId;
         }
 
         const finalMessages = [...newMessages, { ...assistantMessage, content }];
@@ -321,7 +386,7 @@ export function ChatInterface({ conversationId, onConversationCreated, onConvers
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Type your message..."
-                disabled={isLoading}
+                disabled={isLoading || isLoadingConversation}
                 rows={1}
                 className={cn(
                   "w-full resize-none rounded-2xl border border-border bg-card px-4 py-3 pr-32",
@@ -384,7 +449,7 @@ export function ChatInterface({ conversationId, onConversationCreated, onConvers
                 ) : (
                   <button
                     type="submit"
-                    disabled={!input.trim()}
+                    disabled={!input.trim() || isLoadingConversation}
                     className={cn(
                       "p-2 rounded-lg transition-colors",
                       input.trim()

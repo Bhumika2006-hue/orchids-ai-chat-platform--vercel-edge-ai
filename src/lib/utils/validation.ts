@@ -2,12 +2,13 @@ import { z } from 'zod';
 
 export const MessageSchema = z.object({
   role: z.enum(['user', 'assistant', 'system']),
-  content: z.string().min(1).max(32000),
+  content: z.string().min(1).max(163840),
 });
 
 export const ChatRequestSchema = z.object({
   messages: z.array(MessageSchema).min(1),
   conversationId: z.string().optional(),
+  contextMemory: z.string().max(163840).optional(),
 });
 
 export const ConversationSchema = z.object({

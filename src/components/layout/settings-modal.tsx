@@ -25,9 +25,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (settings?.contextMemory) {
-      setContextMemory(settings.contextMemory);
-    }
+    setContextMemory(settings?.contextMemory ?? "");
   }, [settings]);
 
   const handleEmailAuth = async (e: React.FormEvent) => {
