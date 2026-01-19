@@ -333,21 +333,25 @@ export function ChatInterface({
 
   return (
     <div className="flex flex-col h-full relative">
+      {/* Chat header with some padding for mobile menu button */}
+      <div className="md:hidden h-14 flex-shrink-0" />
+      
       <div className="flex-1 overflow-y-auto scrollbar-thin px-4 py-6">
         {messages.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center justify-center h-full text-center px-4"
+            className="flex flex-col items-center justify-center h-full text-center px-4 py-8"
           >
-            <div className="w-20 h-20 rounded-2xl gradient-primary flex items-center justify-center mb-6 shadow-lg shadow-primary/20">
-              <ChainLogo size={48} className="text-white" />
+            <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl gradient-primary flex items-center justify-center mb-4 md:mb-6 shadow-lg shadow-primary/20">
+              <ChainLogo size={40} className="text-white md:hidden" />
+              <ChainLogo size={48} className="text-white hidden md:block" />
             </div>
-            <h2 className="text-2xl font-semibold mb-2">Welcome to Kateno AI</h2>
-            <p className="text-muted-foreground max-w-md mb-8">
+            <h2 className="text-xl md:text-2xl font-semibold mb-2">Welcome to Kateno AI</h2>
+            <p className="text-muted-foreground max-w-md mb-6 md:mb-8 text-sm md:text-base">
               Your intelligent assistant with web search capabilities. Ask me anything!
             </p>
-            <div className="grid grid-cols-2 gap-3 max-w-md">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3 max-w-md w-full">
               {[
                 "Explain quantum computing",
                 "Write a Python script",
@@ -357,7 +361,7 @@ export function ChatInterface({
                 <button
                   key={suggestion}
                   onClick={() => setInput(suggestion)}
-                  className="px-4 py-3 text-sm rounded-xl border border-border hover:bg-secondary/50 transition-colors text-left"
+                  className="px-3 md:px-4 py-2.5 md:py-3 text-xs md:text-sm rounded-xl border border-border hover:bg-secondary/50 transition-colors text-left"
                 >
                   {suggestion}
                 </button>
@@ -376,7 +380,7 @@ export function ChatInterface({
         )}
       </div>
 
-      <div className="border-t border-border bg-background/80 backdrop-blur-sm px-4 py-4">
+      <div className="border-t border-border bg-background/95 backdrop-blur-sm px-4 py-3 md:py-4 flex-shrink-0">
         <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
           <div className="relative flex items-end gap-2">
             <div className="flex-1 relative">
@@ -389,7 +393,7 @@ export function ChatInterface({
                 disabled={isLoading || isLoadingConversation}
                 rows={1}
                 className={cn(
-                  "w-full resize-none rounded-2xl border border-border bg-card px-4 py-3 pr-32",
+                  "w-full resize-none rounded-2xl border border-border bg-card px-4 py-3 pr-24 md:pr-32 text-sm md:text-base",
                   "focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary",
                   "placeholder:text-muted-foreground disabled:opacity-50",
                   "scrollbar-thin max-h-[150px]"

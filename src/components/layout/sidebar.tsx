@@ -25,6 +25,7 @@ export function Sidebar({ currentConversationId, onSelectConversation, onNewConv
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState<{ isOpen: boolean; id: string; title: string }>({
     isOpen: false,
@@ -55,6 +56,7 @@ export function Sidebar({ currentConversationId, onSelectConversation, onNewConv
   }, [onRefreshRef, fetchConversations]);
 
   const handleNewConversation = () => {
+    setIsMobileOpen(false);
     onNewConversation?.();
   };
 
@@ -100,10 +102,29 @@ export function Sidebar({ currentConversationId, onSelectConversation, onNewConv
 
   return (
     <>
+      {/* Mobile menu button */}
+      <button
+        onClick={() => setIsMobileOpen(!isMobileOpen)}
+        className="fixed top-4 left-4 z-30 md:hidden p-2 rounded-lg bg-card border border-border hover:bg-secondary transition-colors"
+      >
+        <Menu className="w-5 h-5" />
+      </button>
+
+      {/* Mobile overlay */}
+      {isMobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
+          onClick={() => setIsMobileOpen(false)}
+        />
+      )}
+
       <aside
         className={cn(
-          "h-full flex flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300 relative z-20",
-          isCollapsed ? "w-16" : "w-64"
+          "h-full flex flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300 relative",
+          "md:relative md:z-20",
+          "fixed inset-y-0 left-0 z-50",
+          isCollapsed ? "w-16" : "w-64",
+          isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         )}
       >
         <div className="p-3 flex items-center justify-between border-b border-sidebar-border">
@@ -143,13 +164,7 @@ export function Sidebar({ currentConversationId, onSelectConversation, onNewConv
         </div>
 
         <nav className="flex-1 overflow-y-auto scrollbar-thin px-3 pb-3">
-          {!user && !isCollapsed && (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              Sign in to save chats
-            </p>
-          )}
-          
-          {user && conversations.length === 0 && !isCollapsed && (
+          {conversations.length === 0 && !isCollapsed && (
             <p className="text-sm text-muted-foreground text-center py-4">
               No conversations yet
             </p>
@@ -173,7 +188,10 @@ export function Sidebar({ currentConversationId, onSelectConversation, onNewConv
                 layout
               >
                 <button
-                  onClick={() => onSelectConversation?.(conv.id)}
+                  onClick={() => {
+                    setIsMobileOpen(false);
+                    onSelectConversation?.(conv.id);
+                  }}
                   className={cn(
                     "w-full flex items-center gap-2 px-3 py-2.5 rounded-xl mb-1 group",
                     "hover:bg-sidebar-accent transition-colors text-left",

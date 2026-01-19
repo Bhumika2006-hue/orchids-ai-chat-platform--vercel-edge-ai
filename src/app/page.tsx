@@ -38,7 +38,7 @@ export default function Home() {
   }, [user, loading, handleNewConversation]);
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden fixed inset-0 md:relative">
       <ChainBackground />
       
       <Sidebar
@@ -50,7 +50,7 @@ export default function Home() {
         }}
       />
 
-      <main className="flex-1 flex flex-col relative z-10">
+      <main className="flex-1 flex flex-col relative z-10 overflow-hidden">
         <ChatInterface
           conversationId={currentConversationId}
           resetKey={newChatKey}

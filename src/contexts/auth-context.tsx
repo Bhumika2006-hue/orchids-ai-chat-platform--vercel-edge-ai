@@ -35,7 +35,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setSettings({ contextMemory: '', theme: 'dark' });
         }
       } else {
-        setSettings(null);
+        // Load settings from localStorage for non-authenticated users
+        try {
+          const savedSettings = localStorage.getItem('kateno-settings');
+          if (savedSettings) {
+            setSettings(JSON.parse(savedSettings));
+          } else {
+            setSettings({ contextMemory: '', theme: 'dark' });
+          }
+        } catch {
+          setSettings({ contextMemory: '', theme: 'dark' });
+        }
       }
       setLoading(false);
     });
@@ -80,10 +90,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const updateSettings = async (newSettings: UserSettings) => {
-    if (!user) return;
     try {
-      await firebaseDb.saveUserSettings(user.uid, newSettings);
+      // Save to localStorage for non-authenticated users
+      localStorage.setItem('kateno-settings', JSON.stringify(newSettings));
       setSettings(newSettings);
+      
+      // Also save to Firebase if user is logged in
+      if (user) {
+        await firebaseDb.saveUserSettings(user.uid, newSettings);
+      }
     } catch (error) {
       console.error('Update settings error:', error);
       throw error;
