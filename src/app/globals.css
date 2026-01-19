@@ -125,9 +125,9 @@
     /* Smooth scrolling */
     -webkit-overflow-scrolling: touch;
   }
-  /* Better touch targets for mobile */
+  /* Better touch targets for mobile - only for interactive elements with touch-target class */
   @media (max-width: 768px) {
-    button, a {
+    .touch-target {
       min-height: 44px;
       min-width: 44px;
     }

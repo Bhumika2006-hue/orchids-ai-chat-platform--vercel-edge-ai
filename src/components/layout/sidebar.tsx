@@ -121,9 +121,8 @@ export function Sidebar({ currentConversationId, onSelectConversation, onNewConv
               setIsMobileOpen(false);
             }
           }}
-          role="button"
           tabIndex={0}
-          aria-label="Close menu"
+          aria-label="Close menu overlay"
         />
       )}
 

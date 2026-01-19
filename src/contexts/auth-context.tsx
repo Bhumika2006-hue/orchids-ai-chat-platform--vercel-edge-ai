@@ -39,7 +39,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           const savedSettings = localStorage.getItem('kateno-settings');
           if (savedSettings) {
-            setSettings(JSON.parse(savedSettings));
+            const parsed = JSON.parse(savedSettings);
+            // Validate the structure
+            if (parsed && typeof parsed === 'object' && 
+                (typeof parsed.contextMemory === 'string' || parsed.contextMemory === undefined) &&
+                (typeof parsed.theme === 'string' || parsed.theme === undefined)) {
+              setSettings(parsed);
+            } else {
+              setSettings({ contextMemory: '', theme: 'dark' });
+            }
           } else {
             setSettings({ contextMemory: '', theme: 'dark' });
           }
