@@ -91,13 +91,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const updateSettings = async (newSettings: UserSettings) => {
     try {
-      // Save to localStorage for non-authenticated users
-      localStorage.setItem('kateno-settings', JSON.stringify(newSettings));
-      setSettings(newSettings);
-      
-      // Also save to Firebase if user is logged in
       if (user) {
+        // Save to Firebase for authenticated users
         await firebaseDb.saveUserSettings(user.uid, newSettings);
+        setSettings(newSettings);
+      } else {
+        // Save to localStorage for non-authenticated users
+        localStorage.setItem('kateno-settings', JSON.stringify(newSettings));
+        setSettings(newSettings);
       }
     } catch (error) {
       console.error('Update settings error:', error);

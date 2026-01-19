@@ -105,6 +105,7 @@ export function Sidebar({ currentConversationId, onSelectConversation, onNewConv
       {/* Mobile menu button */}
       <button
         onClick={() => setIsMobileOpen(!isMobileOpen)}
+        aria-label="Toggle menu"
         className="fixed top-4 left-4 z-30 md:hidden p-2 rounded-lg bg-card border border-border hover:bg-secondary transition-colors"
       >
         <Menu className="w-5 h-5" />
@@ -115,6 +116,14 @@ export function Sidebar({ currentConversationId, onSelectConversation, onNewConv
         <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
           onClick={() => setIsMobileOpen(false)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              setIsMobileOpen(false);
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          aria-label="Close menu"
         />
       )}
 
