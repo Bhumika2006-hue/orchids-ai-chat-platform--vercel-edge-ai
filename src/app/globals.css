@@ -121,6 +121,8 @@
   html {
     /* Prevent horizontal overflow */
     overflow-x: hidden;
+    /* Mobile viewport fix: Use dynamic viewport height for mobile browsers */
+    height: 100%;
   }
   body {
     @apply bg-background text-foreground;
@@ -130,6 +132,8 @@
     -webkit-overflow-scrolling: touch;
     /* Prevent horizontal overflow */
     overflow-x: hidden;
+    /* Mobile viewport fix: Use dynamic viewport height */
+    height: 100%;
   }
   /* Better touch targets for mobile - only for interactive elements with touch-target class */
   @media (max-width: 768px) {
@@ -186,6 +190,17 @@
 
   .overflow-wrap-anywhere {
     overflow-wrap: anywhere;
+  }
+
+  /* Mobile viewport height fix */
+  .h-screen-mobile-safe {
+    height: 100vh; /* Fallback for older browsers */
+    height: 100dvh; /* Dynamic viewport height for mobile browsers */
+  }
+
+  /* iOS safe-area padding for chat input */
+  .pb-safe-area {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
   }
 
   /* Message content styling */
