@@ -246,11 +246,8 @@ export const ChatMessage = memo(function ChatMessage({ message }: ChatMessagePro
           )}
         >
           <div className={cn(
-            "prose prose-sm max-w-none",
+            "prose prose-sm max-w-none message-content",
             "overflow-wrap-anywhere break-words",
-            "[&_pre]:overflow-x-auto [&_pre]:max-w-full",
-            "[&_code]:break-words [&_code]:overflow-wrap-anywhere",
-            "[&_pre_code]:whitespace-pre [&_pre_code]:break-normal",
             isUser && "text-white [&_*]:text-white"
           )}>
             {parsedContent}
