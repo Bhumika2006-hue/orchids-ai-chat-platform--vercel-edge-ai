@@ -27,7 +27,7 @@ function CodeBlock({ code, language }: { code: string; language: string }) {
   };
 
   return (
-    <div className="code-block-wrapper">
+    <div className="code-block-wrapper max-w-full">
       <div className="code-block-header">
         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
           {language || 'code'}
@@ -49,9 +49,9 @@ function CodeBlock({ code, language }: { code: string; language: string }) {
           )}
         </button>
       </div>
-      <div className="code-block-content scrollbar-thin">
-        <pre>
-          <code className="font-mono text-sm">{code}</code>
+      <div className="code-block-content scrollbar-thin overflow-x-auto">
+        <pre className="min-w-max">
+          <code className="font-mono text-sm whitespace-pre">{code}</code>
         </pre>
       </div>
     </div>
@@ -236,17 +236,21 @@ export const ChatMessage = memo(function ChatMessage({ message }: ChatMessagePro
         )}
       </div>
 
-      <div className={cn("flex-1 min-w-0 max-w-[85%]", isUser && "flex flex-col items-end")}>
+      <div className={cn("flex-1 min-w-0 max-w-[85%] sm:max-w-[80%] md:max-w-[75%]", isUser && "flex flex-col items-end")}>
         <div
           className={cn(
-            "rounded-2xl px-4 py-3 break-words",
+            "rounded-2xl px-4 py-3 break-words overflow-x-auto overflow-y-hidden",
             isUser
               ? "gradient-primary text-white"
               : "bg-card border border-border"
           )}
         >
           <div className={cn(
-            "prose prose-sm max-w-none overflow-hidden",
+            "prose prose-sm max-w-none",
+            "overflow-wrap-anywhere break-words",
+            "[&_pre]:overflow-x-auto [&_pre]:max-w-full",
+            "[&_code]:break-words [&_code]:overflow-wrap-anywhere",
+            "[&_pre_code]:whitespace-pre [&_pre_code]:break-normal",
             isUser && "text-white [&_*]:text-white"
           )}>
             {parsedContent}
