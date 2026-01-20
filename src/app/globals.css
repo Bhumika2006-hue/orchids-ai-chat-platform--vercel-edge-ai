@@ -198,6 +198,11 @@
     height: 100dvh; /* Dynamic viewport height for mobile browsers */
   }
 
+  /* iOS safe-area padding for chat input */
+  .pb-safe-area {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+
   /* Message content styling */
   .message-content code {
     word-break: break-word;
