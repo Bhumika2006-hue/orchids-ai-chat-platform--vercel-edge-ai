@@ -332,11 +332,11 @@ export function ChatInterface({
   };
 
   return (
-    <div className="flex flex-col h-full relative">
+    <div className="flex flex-col h-full relative overflow-hidden">
       {/* Chat header with some padding for mobile menu button */}
       <div className="md:hidden h-14 flex-shrink-0" />
       
-      <div className="flex-1 overflow-y-auto scrollbar-thin px-4 py-6">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin px-2 sm:px-4 py-6">
         {messages.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -369,7 +369,7 @@ export function ChatInterface({
             </div>
           </motion.div>
         ) : (
-          <div className="max-w-3xl mx-auto space-y-4">
+          <div className="max-w-3xl mx-auto space-y-4 w-full">
             <AnimatePresence mode="popLayout">
               {messages.map((message) => (
                 <ChatMessage key={message.id} message={message} />
@@ -380,10 +380,10 @@ export function ChatInterface({
         )}
       </div>
 
-      <div className="border-t border-border bg-background/95 backdrop-blur-sm px-4 py-3 md:py-4 flex-shrink-0">
+      <div className="border-t border-border bg-background/95 backdrop-blur-sm px-2 sm:px-4 py-3 md:py-4 flex-shrink-0">
         <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
           <div className="relative flex items-end gap-2">
-            <div className="flex-1 relative">
+            <div className="flex-1 relative min-w-0">
               <textarea
                 ref={textareaRef}
                 value={input}
@@ -396,7 +396,7 @@ export function ChatInterface({
                   "w-full resize-none rounded-2xl border border-border bg-card px-4 py-3 pr-24 md:pr-32 text-sm md:text-base",
                   "focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary",
                   "placeholder:text-muted-foreground disabled:opacity-50",
-                  "scrollbar-thin max-h-[150px]"
+                  "scrollbar-thin max-h-[150px] overflow-y-auto"
                 )}
               />
               <div className="absolute right-2 bottom-2 flex items-center gap-1">
@@ -410,7 +410,7 @@ export function ChatInterface({
                     <FileText className="w-4 h-4" />
                   </button>
                   {showDocTools && (
-                    <div className="absolute bottom-full right-0 mb-2 p-2 bg-card border border-border rounded-xl shadow-lg min-w-[140px]">
+                    <div className="absolute bottom-full right-0 mb-2 p-2 bg-card border border-border rounded-xl shadow-lg min-w-[140px] z-10">
                       <button
                         type="button"
                         onClick={() => generateDocument('pdf')}
