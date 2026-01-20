@@ -38,7 +38,7 @@ export default function Home() {
   }, [user, loading, handleNewConversation]);
 
   return (
-    <div className="flex h-screen overflow-hidden fixed inset-0 md:relative">
+    <div className="flex h-screen-mobile-safe overflow-hidden fixed inset-0 md:relative">
       <ChainBackground />
       
       <Sidebar

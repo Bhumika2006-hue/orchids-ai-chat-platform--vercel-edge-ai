@@ -380,7 +380,7 @@ export function ChatInterface({
         )}
       </div>
 
-      <div className="border-t border-border bg-background/95 backdrop-blur-sm px-2 sm:px-4 py-3 md:py-4 flex-shrink-0">
+      <div className="border-t border-border bg-background/95 backdrop-blur-sm px-2 sm:px-4 py-3 md:py-4 flex-shrink-0" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
         <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
           <div className="relative flex items-end gap-2">
             <div className="flex-1 relative min-w-0">
