@@ -1,4 +1,4 @@
-# Kateno AI - Production-Ready AI Chat Application
+# Kateno AI : Production-Ready AI Chat Application
 
 A powerful AI chatbot built with Next.js 15, React 19, TypeScript, and Groq AI. Features real-time chat, conversation history, Firebase authentication, and a beautiful UI with Tailwind CSS and shadcn/ui.
 
